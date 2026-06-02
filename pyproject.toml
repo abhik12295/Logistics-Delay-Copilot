@@ -1,0 +1,32 @@
+[project]
+name = "ieee-bigdata-2026"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Abhishek Kumar", email = "abhik12295@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "numpy>=2.4.6",
+    "pandas>=3.0.3",
+    "plotly>=6.7.0",
+    "pydantic>=2.13.4",
+    "python-dotenv>=1.2.2",
+    "scikit-learn>=1.8.0",
+    "streamlit>=1.58.0",
+]
+
+[project.scripts]
+ieee-bigdata-2026 = "ieee_bigdata_2026:main"
+
+[build-system]
+requires = ["uv_build>=0.11.3,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.2.0",
+    "pytest>=9.0.3",
+    "ruff>=0.15.15",
+]
