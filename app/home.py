@@ -14,6 +14,8 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from logidelay.copilot.explanation_engine import generate_explanation
+from logidelay.utils.app_helpers import load_data_from_sidebar
+from logidelay.copilot.explanation_engine import generate_explanation
 from logidelay.diagnosis.weak_labeler import add_root_cause_labels
 from logidelay.features.event_features import add_event_features
 from logidelay.severity.scoring import add_operational_exception_severity
@@ -41,27 +43,35 @@ This MVP uses free/open-source Python logic only. No paid AI API is required.
 """
 )
 
-sample_path = ROOT_DIR / "data" / "sample" / "sample_logistics_events.csv"
+# sample_path = ROOT_DIR / "data" / "sample" / "sample_logistics_events.csv"
 
-if not sample_path.exists():
-    st.warning(
-        "Sample data not found. Run: `uv run python scripts/prepare_sample_data.py`"
-    )
-    st.stop()
+# if not sample_path.exists():
+#     st.warning(
+#         "Sample data not found. Run: `uv run python scripts/prepare_sample_data.py`"
+#     )
+#     st.stop()
 
-df = pd.read_csv(sample_path)
+# df = pd.read_csv(sample_path)
 
-# Recalculate if columns are missing
-required_cols = {
-    "delay_minutes",
-    "operational_exception_severity",
-    "severity_class",
-    "root_cause_label",
-}
-if not required_cols.issubset(df.columns):
-    df = add_event_features(df)
-    df = add_operational_exception_severity(df)
-    df = add_root_cause_labels(df)
+# # Recalculate if columns are missing
+# required_cols = {
+#     "delay_minutes",
+#     "operational_exception_severity",
+#     "severity_class",
+#     "root_cause_label",
+# }
+# if not required_cols.issubset(df.columns):
+#     df = add_event_features(df)
+#     df = add_operational_exception_severity(df)
+#     df = add_root_cause_labels(df)
+df = load_data_from_sidebar(str(ROOT_DIR))
+
+st.sidebar.download_button(
+    label="Download current dataset",
+    data=df.to_csv(index=False).encode("utf-8"),
+    file_name="logidelay_current_dataset.csv",
+    mime="text/csv",
+)
 
 total_deliveries = len(df)
 delayed_count = int(df["is_delayed"].sum())

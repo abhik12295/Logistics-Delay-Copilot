@@ -11,7 +11,7 @@ SRC_DIR = ROOT_DIR / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from logidelay.utils.app_helpers import load_sample_data
+from logidelay.utils.app_helpers import load_data_from_sidebar
 
 st.set_page_config(page_title="Data Overview", page_icon="📊", layout="wide")
 
@@ -23,7 +23,7 @@ The final research version will replace or extend this with public benchmark dat
 """
 )
 
-df = load_sample_data(str(ROOT_DIR))
+df = load_data_from_sidebar(str(ROOT_DIR))
 
 st.subheader("Dataset Preview")
 st.dataframe(df.head(50), use_container_width=True)

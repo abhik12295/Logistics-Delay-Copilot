@@ -11,7 +11,7 @@ SRC_DIR = ROOT_DIR / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from logidelay.utils.app_helpers import load_sample_data
+from logidelay.utils.app_helpers import load_data_from_sidebar
 
 st.set_page_config(page_title="Severity Dashboard", page_icon="🚦", layout="wide")
 
@@ -25,7 +25,7 @@ and route execution instability.
 """
 )
 
-df = load_sample_data(str(ROOT_DIR))
+df = load_data_from_sidebar(str(ROOT_DIR))
 
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Average OES", f"{df['operational_exception_severity'].mean():.2f}")

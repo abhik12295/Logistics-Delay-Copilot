@@ -12,7 +12,7 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from logidelay.copilot.explanation_engine import generate_explanation
-from logidelay.utils.app_helpers import load_sample_data
+from logidelay.utils.app_helpers import load_data_from_sidebar
 
 st.set_page_config(page_title="Delay Diagnosis", page_icon="🧭", layout="wide")
 
@@ -24,7 +24,7 @@ supporting event evidence, and planner-facing explanation.
 """
 )
 
-df = load_sample_data(str(ROOT_DIR))
+df = load_data_from_sidebar(str(ROOT_DIR))
 
 severity_filter = st.multiselect(
     "Filter by severity",

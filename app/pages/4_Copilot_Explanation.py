@@ -12,7 +12,7 @@ if str(SRC_DIR) not in sys.path:
 
 from logidelay.copilot.explanation_engine import generate_explanation
 from logidelay.copilot.recommendation_engine import recommend_action
-from logidelay.utils.app_helpers import load_sample_data
+from logidelay.utils.app_helpers import load_data_from_sidebar
 
 st.set_page_config(page_title="Copilot Explanation", page_icon="🤖", layout="wide")
 
@@ -24,7 +24,7 @@ The current MVP uses a grounded template engine, not a paid AI API.
 """
 )
 
-df = load_sample_data(str(ROOT_DIR))
+df = load_data_from_sidebar(str(ROOT_DIR))
 
 selected_package = st.selectbox("Select package", df["package_id"].tolist())
 record = df[df["package_id"] == selected_package].iloc[0]
