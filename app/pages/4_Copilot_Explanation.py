@@ -49,10 +49,13 @@ st.success(
 
 st.subheader("Grounded Evidence Used")
 evidence = {
+    "Distance km": record["distance_km"],
+    "Expected execution time minutes": record["expected_execution_time_minutes"],
+    "Actual execution time minutes": record["execution_time_minutes"],
+    "Distance-adjusted execution ratio": record["distance_adjusted_execution_ratio"],
     "Delay minutes": record["delay_minutes"],
     "Acceptance gap minutes": record["acceptance_gap_minutes"],
     "Pickup gap minutes": record["pickup_gap_minutes"],
-    "Execution time minutes": record["execution_time_minutes"],
     "Courier workload 2h": record["courier_workload_2h"],
     "Workload pressure score": record["workload_pressure_score"],
     "Event abnormality score": record["event_sequence_abnormality_score"],

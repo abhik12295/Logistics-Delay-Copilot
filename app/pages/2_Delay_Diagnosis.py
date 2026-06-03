@@ -84,6 +84,9 @@ st.dataframe(timeline, use_container_width=True)
 st.subheader("Evidence Features")
 
 evidence_cols = [
+    "distance_km",
+    "expected_execution_time_minutes",
+    "distance_adjusted_execution_ratio",
     "acceptance_gap_minutes",
     "pickup_gap_minutes",
     "execution_time_minutes",

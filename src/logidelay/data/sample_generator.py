@@ -1,18 +1,36 @@
 from __future__ import annotations
+
 import random
 from datetime import datetime, timedelta
+
 import pandas as pd
+
+
+CITY_COORDINATES = {
+    "Memphis": (35.1495, -90.0490),
+    "Chicago": (41.8781, -87.6298),
+    "Dallas": (32.7767, -96.7970),
+    "Atlanta": (33.7490, -84.3880),
+    "Newark": (40.7357, -74.1724),
+}
+
+
+def _jitter_coordinate(value: float, spread: float = 0.08) -> float:
+    """Create nearby synthetic points around a city center."""
+    return value + random.uniform(-spread, spread)
+
 
 def generate_sample_logistics_events(n_rows: int = 500, seed: int = 42) -> pd.DataFrame:
     """
     Generate synthetic country-neutral logistics event logs for MVP development.
-    This is not the final research dataset.
-    It allows us to build and test the diagnosis, severity, and explanation pipeline before integrating LaDe.
-    """
 
+    This is not the final research dataset. It allows us to build and test the
+    diagnosis, severity, distance-aware route instability, and explanation pipeline
+    before integrating the real public benchmark dataset.
+    """
     random.seed(seed)
 
-    cities = ["Memphis", "Chicago", "Dallas", "Atlanta", "Newark"]
+    cities = list(CITY_COORDINATES.keys())
     zones = ["Z1", "Z2", "Z3", "Z4", "Z5"]
     task_types = ["delivery", "pickup"]
 
@@ -26,26 +44,31 @@ def generate_sample_logistics_events(n_rows: int = 500, seed: int = 42) -> pd.Da
         zone_id = random.choice(zones)
         task_type = random.choice(task_types)
 
+        city_lat, city_lng = CITY_COORDINATES[city]
+
+        origin_lat = _jitter_coordinate(city_lat)
+        origin_lng = _jitter_coordinate(city_lng)
+        destination_lat = _jitter_coordinate(city_lat)
+        destination_lng = _jitter_coordinate(city_lng)
+
         assigned_time = base_time + timedelta(
-            days = random.randint(0,30),
-            hours = random.randint(0, 10),  
-            minutes = random.randint(0, 59),
+            days=random.randint(0, 30),
+            hours=random.randint(0, 10),
+            minutes=random.randint(0, 59),
         )
 
-        # build realistic delay patterns
         scenario = random.choices(
-            population =[
+            population=[
                 "normal",
                 "acceptance_delay",
                 "pickup_delay",
                 "execution_delay",
                 "workload_pressure",
-                "evenet_inconsistence",
-                "severe_time_woind"
+                "event_inconsistency",
+                "severe_time_window_violation",
             ],
-
-            weights = [45, 12, 10, 12, 10, 5, 6],
-            k = 1,
+            weights=[45, 12, 10, 12, 10, 5, 6],
+            k=1,
         )[0]
 
         if scenario == "acceptance_delay":
@@ -114,6 +137,10 @@ def generate_sample_logistics_events(n_rows: int = 500, seed: int = 42) -> pd.Da
                 "city": city,
                 "zone_id": zone_id,
                 "task_type": task_type,
+                "origin_lat": origin_lat,
+                "origin_lng": origin_lng,
+                "destination_lat": destination_lat,
+                "destination_lng": destination_lng,
                 "assigned_time": assigned_time,
                 "accepted_time": accepted_time,
                 "pickup_time": pickup_time,
