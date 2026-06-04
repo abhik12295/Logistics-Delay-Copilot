@@ -44,3 +44,7 @@ Thumbs.db
 .ruff_cache/
 .coverage
 htmlcov/
+
+models/
+*.pkl
+*.joblib
