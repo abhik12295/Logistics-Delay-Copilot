@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [
     { name = "Abhishek Kumar", email = "abhik12295@gmail.com" }
 ]
-requires-python = ">=3.11,<3.15"
+requires-python = ">=3.14"
 dependencies = [
     "joblib>=1.4.2",
     "numpy>=2.0.0",
@@ -16,6 +16,7 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "scikit-learn>=1.5.0",
     "streamlit>=1.37.0",
+    "watchdog>=6.0.0",
 ]
 
 [build-system]
