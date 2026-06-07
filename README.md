@@ -20,3 +20,22 @@ This project builds a country-neutral AI logistics framework that detects delaye
 ```bash
 uv sync
 uv run streamlit run app/Home.py
+
+
+## Standard Input Schema
+
+LogiDelay Copilot uses a standard event-log schema.
+
+Required columns:
+
+```text
+package_id
+courier_id
+city
+zone_id
+assigned_time
+accepted_time
+pickup_time
+completed_time
+promised_delivery_time
+courier_workload_2h

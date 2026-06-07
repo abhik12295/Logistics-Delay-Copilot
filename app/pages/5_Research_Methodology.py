@@ -40,5 +40,19 @@ vs.
 Machine learning root-cause classification
 vs.
 GenAI-style grounded explanation
+
+
+# Dataset Standardization Layer
+
+The project uses a standard event-log schema so the framework can remain
+country-neutral and dataset-flexible. Raw datasets are first mapped into common
+columns such as package ID, courier/carrier ID, assigned time, accepted time,
+pickup/task start time, completion time, promised delivery time, workload, and
+origin/destination coordinates.
+
+This allows the same diagnosis and severity pipeline to work across public
+last-mile datasets, enterprise TMS-style datasets, or future benchmark datasets.
 """
+
+
 )
