@@ -24,5 +24,21 @@ Event Logs
 → Operational Exception Severity
 → Explanation Generation
 → Corrective Action Recommendation
+
+# Baseline Machine Learning Evaluation
+
+The MVP includes a baseline machine learning classifier trained on weak-labeled
+root-cause categories. The classifier uses event-gap features, distance-aware
+execution features, workload pressure, event abnormality, delay category, and
+Operational Exception Severity.
+
+This allows the research to compare:
+
+```text
+Rule-based diagnosis
+vs.
+Machine learning root-cause classification
+vs.
+GenAI-style grounded explanation
 """
 )
