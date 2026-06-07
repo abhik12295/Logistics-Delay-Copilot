@@ -187,3 +187,17 @@ Logistics Event Logs
 """,
     language="text",
 )
+
+st.markdown(
+    """
+### Next Research Output
+
+Use the **Research Results** page to generate paper-ready summary tables for:
+
+- delay distribution
+- root-cause distribution
+- severity distribution
+- average OES by root cause
+- top exception examples
+"""
+)
