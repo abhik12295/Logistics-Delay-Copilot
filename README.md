@@ -54,3 +54,36 @@ The Streamlit app includes research-oriented pages for:
 - Research results summary
 
 The Research Results page provides downloadable CSV tables that can support the experiment and results sections of the IEEE BigData paper.
+
+# Public Dataset Integration Plan
+
+## Purpose
+
+This project uses a country-neutral standard event-log schema. Public logistics
+datasets may use different column names, so we first map raw dataset columns into
+the standard LogiDelay schema.
+
+## Standard Schema
+
+Required columns:
+
+```text
+package_id
+courier_id
+city
+zone_id
+assigned_time
+accepted_time
+pickup_time
+completed_time
+promised_delivery_time
+courier_workload_2h
+
+```markdown
+## Public Dataset Integration
+
+Raw public logistics datasets can be mapped into the standard LogiDelay schema
+using:
+
+```bash
+uv run python scripts/prepare_public_dataset.py
