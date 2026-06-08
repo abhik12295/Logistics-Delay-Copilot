@@ -8,10 +8,12 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
+    "datasets>=5.0.0",
     "joblib>=1.4.2",
     "numpy>=2.0.0",
     "pandas>=2.2.0",
     "plotly>=5.24.0",
+    "pyarrow>=24.0.0",
     "pydantic>=2.8.0",
     "python-dotenv>=1.0.1",
     "scikit-learn>=1.5.0",
