@@ -6,9 +6,17 @@ import pandas as pd
 def diagnose_root_cause(row: pd.Series) -> str:
     """
     Transparent weak-labeling rules for logistics delay diagnosis.
+
+    The logic first checks for event-data issues. If the task is not delayed and
+    the event sequence is valid, the record is labeled as No significant delay.
+    This prevents normal waiting time before a service window from being
+    incorrectly labeled as an operational delay.
     """
     if row.get("event_sequence_abnormality_score", 0) >= 1:
         return "Event-data inconsistency"
+
+    if row.get("delay_minutes", 0) <= 0:
+        return "No significant delay"
 
     if row.get("acceptance_gap_minutes", 0) >= 75:
         return "Courier acceptance delay"
@@ -23,7 +31,7 @@ def diagnose_root_cause(row: pd.Series) -> str:
         return "Route execution instability"
 
     if row.get("delay_minutes", 0) > 0:
-        return "Delivery execution delay"
+        return "Delivery/service execution delay"
 
     return "No significant delay"
 
