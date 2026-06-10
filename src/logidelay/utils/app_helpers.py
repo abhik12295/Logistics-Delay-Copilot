@@ -25,15 +25,25 @@ REQUIRED_RAW_COLUMNS = {
 
 
 @st.cache_data
+def load_csv_data(path: str) -> pd.DataFrame:
+    csv_path = Path(path)
+
+    if not csv_path.exists():
+        raise FileNotFoundError(f"Dataset not found: {csv_path}")
+
+    return pd.read_csv(csv_path)
+
+
+@st.cache_data
 def load_sample_data(root_dir: str) -> pd.DataFrame:
     sample_path = Path(root_dir) / "data" / "sample" / "sample_logistics_events.csv"
+    return load_csv_data(str(sample_path))
 
-    if not sample_path.exists():
-        raise FileNotFoundError(
-            "Sample data not found. Run: uv run python scripts/prepare_sample_data.py"
-        )
 
-    return pd.read_csv(sample_path)
+@st.cache_data
+def load_lade_p_data(root_dir: str) -> pd.DataFrame:
+    lade_path = Path(root_dir) / "data" / "processed" / "lade_p_standardized_sample.csv"
+    return load_csv_data(str(lade_path))
 
 
 def validate_input_data(df: pd.DataFrame) -> list[str]:
@@ -54,23 +64,73 @@ def process_event_data(df: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
+def ensure_processed_data(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Ensure a dataset has all derived LogiDelay fields.
+
+    If derived columns are missing, run the processing pipeline.
+    """
+    required_processed_cols = {
+        "delay_minutes",
+        "delay_category",
+        "is_delayed",
+        "distance_km",
+        "distance_adjusted_execution_ratio",
+        "route_execution_instability_score",
+        "operational_exception_severity",
+        "severity_class",
+        "root_cause_label",
+    }
+
+    if required_processed_cols.issubset(df.columns):
+        return df
+
+    return process_event_data(df)
+
+
 def load_data_from_sidebar(root_dir: str) -> pd.DataFrame:
     """
     Shared Streamlit sidebar loader.
 
-    Allows user to select sample data or upload a CSV file.
+    Allows user to select synthetic sample data, LaDe-P public sample, or upload CSV.
     """
     st.sidebar.header("Data Source")
 
     data_source = st.sidebar.radio(
         "Choose data source",
-        options=["Use sample data", "Upload CSV"],
+        options=[
+            "Use synthetic sample data",
+            "Use LaDe-P public sample",
+            "Upload CSV",
+        ],
     )
 
-    if data_source == "Use sample data":
-        df = load_sample_data(root_dir)
-        st.sidebar.success("Using sample logistics event data.")
-        return df
+    if data_source == "Use synthetic sample data":
+        try:
+            df = load_sample_data(root_dir)
+        except FileNotFoundError:
+            st.sidebar.error("Synthetic sample data not found.")
+            st.error("Run this command first:")
+            st.code("uv run python scripts/prepare_sample_data.py", language="bash")
+            st.stop()
+
+        st.sidebar.success("Using synthetic sample logistics event data.")
+        return ensure_processed_data(df)
+
+    if data_source == "Use LaDe-P public sample":
+        try:
+            df = load_lade_p_data(root_dir)
+        except FileNotFoundError:
+            st.sidebar.error("LaDe-P public sample not found.")
+            st.error("Run this command first:")
+            st.code("uv run python scripts/prepare_lade_p_sample.py", language="bash")
+            st.stop()
+
+        st.sidebar.success("Using LaDe-P public benchmark sample.")
+        st.sidebar.caption(
+            "This sample represents pickup service-task records from the public LaDe-P dataset."
+        )
+        return ensure_processed_data(df)
 
     uploaded_file = st.sidebar.file_uploader(
         "Upload logistics event CSV",
@@ -78,7 +138,7 @@ def load_data_from_sidebar(root_dir: str) -> pd.DataFrame:
     )
 
     if uploaded_file is None:
-        st.sidebar.info("Upload a CSV file or switch back to sample data.")
+        st.sidebar.info("Upload a CSV file or select a built-in dataset.")
         st.stop()
 
     raw_df = pd.read_csv(uploaded_file)
@@ -92,6 +152,6 @@ def load_data_from_sidebar(root_dir: str) -> pd.DataFrame:
         st.code("\n".join(sorted(REQUIRED_RAW_COLUMNS)), language="text")
         st.stop()
 
-    processed_df = process_event_data(raw_df)
+    processed_df = ensure_processed_data(raw_df)
     st.sidebar.success("Uploaded CSV processed successfully.")
     return processed_df

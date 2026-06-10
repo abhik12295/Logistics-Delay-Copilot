@@ -31,15 +31,16 @@ st.title("🚚 LogiDelay Copilot")
 st.subheader("Explainable AI for Logistics Delay Diagnosis")
 
 st.markdown(
-    """
-LogiDelay Copilot is a research prototype for diagnosing logistics delivery delays
+"""
+LogiDelay Copilot is a research prototype for diagnosing logistics service delays
 using event logs and **Operational Exception Severity**.
 
-The system identifies delayed deliveries, diagnoses the likely operational cause,
+The system identifies delayed logistics tasks, diagnoses the likely operational cause,
 assigns a severity score, and generates a planner-facing explanation with a
 recommended action.
 
-This MVP uses free/open-source Python logic only. No paid AI API is required.
+The app supports both synthetic MVP data and a standardized public LaDe-P sample.
+No paid AI API is required.
 """
 )
 

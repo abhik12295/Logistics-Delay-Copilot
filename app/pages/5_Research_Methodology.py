@@ -11,8 +11,13 @@ st.markdown(
 # Research Objective
 
 This project proposes a country-neutral explainable AI framework for logistics delay diagnosis.
-The goal is not only to detect that a delivery is late, but to diagnose why it is late,
-estimate how serious the exception is, and generate a planner-facing explanation.
+The goal is not only to detect that a logistics task is late, but to diagnose why it is late,
+estimate how serious the exception is, and generate a planner-facing explanation with a recommended action.
+
+The current app supports logistics service-task delay diagnosis, with pickup service delay used as the
+first real public-data validation case.
+
+---
 
 # Core Pipeline
 
