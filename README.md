@@ -1,10 +1,17 @@
-# LogiDelay Copilot
+# A Hybrid Machine Learning and Generative AI Framework for Proactive Service-Window Breach Prevention in Last-Mile Logistics
 
-Explainable AI for logistics delay diagnosis using event logs and Operational Exception Severity.
+Proactive Dispatch Risk Copilot
+
+- Dispatch teams need early warning for pickup tasks that are likely to miss their service window, so they can intervene before the failure happens.
 
 ## Research Goal
 
-This project builds a country-neutral AI logistics framework that detects delayed deliveries, diagnoses likely operational causes, assigns an Operational Exception Severity score, and generates planner-facing explanations and recommended actions.
+- Core contribution
+- Predict pickup service-window breach risk using real public courier event logs.
+- Engineer distance-aware, workload-aware, and time-pressure features.
+- Create an intervention urgency score for dispatch prioritization.
+- Use GenAI to generate grounded dispatcher recommendations.
+- Evaluate against rule-based alerting and ML baselines using imbalanced classification and top-K operational metrics.
 
 ## Core Features
 
