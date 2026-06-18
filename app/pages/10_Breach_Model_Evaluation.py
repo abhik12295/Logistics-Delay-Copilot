@@ -358,10 +358,20 @@ if calibration_df.empty:
         "Calibration file was not found. Run `uv run python scripts/train_breach_model.py` again."
     )
 else:
+    calibration_models = sorted(
+        calibration_df["model_name"].dropna().unique().tolist()
+    )
+
+    default_calibration_index = (
+        calibration_models.index(best_model)
+        if best_model in calibration_models
+        else 0
+    )
+
     selected_calibration_model = st.selectbox(
         "Select model for calibration view",
-        sorted(calibration_df["model_name"].dropna().unique().tolist()),
-        index=0,
+        calibration_models,
+        index=default_calibration_index,
     )
 
     selected_calibration_df = calibration_df[
