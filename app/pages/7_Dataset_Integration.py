@@ -1,151 +1,10 @@
-# from __future__ import annotations
-
-# from pathlib import Path
-# import sys
-
-# import pandas as pd
-# import streamlit as st
-
-# ROOT_DIR = Path(__file__).resolve().parents[2]
-# SRC_DIR = ROOT_DIR / "src"
-
-# if str(SRC_DIR) not in sys.path:
-#     sys.path.insert(0, str(SRC_DIR))
-
-# from logidelay.data.schema_adapter import (
-#     OPTIONAL_STANDARD_COLUMNS,
-#     REQUIRED_STANDARD_COLUMNS,
-#     STANDARD_COLUMNS,
-#     validate_standard_schema,
-# )
-
-# st.set_page_config(page_title="Dataset Integration", page_icon="🧩", layout="wide")
-
-# st.title("🧩 Dataset Integration")
-# st.markdown(
-#     """
-# This page defines the standard LogiDelay input schema.
-
-# The goal is to make the research framework country-neutral and dataset-flexible.
-# Any public or enterprise logistics dataset can be used if it can be mapped into
-# this standard event-log structure.
-# """
-# )
-
-# st.subheader("Standard LogiDelay Schema")
-
-# schema_df = pd.DataFrame(
-#     {
-#         "column_name": STANDARD_COLUMNS,
-#         "required": [
-#             "Yes" if col in REQUIRED_STANDARD_COLUMNS else "Optional"
-#             for col in STANDARD_COLUMNS
-#         ],
-#         "description": [
-#             "Unique package, shipment, order, or delivery identifier",
-#             "Courier, carrier, driver, or delivery resource identifier",
-#             "City or service area",
-#             "Operational zone, region, or cluster",
-#             "Task type such as delivery or pickup",
-#             "Origin latitude",
-#             "Origin longitude",
-#             "Destination latitude",
-#             "Destination longitude",
-#             "Time when the task was assigned or created",
-#             "Time when the courier/carrier accepted the task",
-#             "Time when pickup or task execution started",
-#             "Time when delivery/task was completed",
-#             "Promised or expected delivery completion time",
-#             "Number of courier tasks in a recent operating window",
-#         ],
-#     }
-# )
-
-# st.dataframe(schema_df, use_container_width=True)
-
-# st.divider()
-
-# st.subheader("Why This Schema Is Country-Neutral")
-
-# st.markdown(
-#     """
-# The framework does not depend on one country's logistics system. It depends on
-# universal event-log concepts:
-
-# - task assignment
-# - task acceptance
-# - pickup or task start
-# - completion
-# - promised service time
-# - workload
-# - distance or location
-# - event gaps
-
-# These concepts are common across last-mile delivery, freight transportation,
-# parcel delivery, and TMS-style logistics systems.
-# """
-# )
-
-# st.divider()
-
-# st.subheader("Validate a CSV Against the Standard Schema")
-
-# uploaded_file = st.file_uploader(
-#     "Upload a CSV to validate schema only",
-#     type=["csv"],
-# )
-
-# if uploaded_file is not None:
-#     df = pd.read_csv(uploaded_file)
-#     validation = validate_standard_schema(df)
-
-#     if validation.is_valid:
-#         st.success("CSV matches the required LogiDelay schema.")
-
-#         col1, col2 = st.columns(2)
-#         col1.markdown("#### Available optional columns")
-#         col1.write(validation.available_optional_columns)
-
-#         col2.markdown("#### Missing optional columns")
-#         col2.write(validation.missing_optional_columns)
-
-#     else:
-#         st.error("CSV is missing required columns.")
-#         st.markdown("#### Missing required columns")
-#         st.code("\n".join(validation.missing_required_columns), language="text")
-
-#         st.markdown("#### Required columns")
-#         st.code("\n".join(REQUIRED_STANDARD_COLUMNS), language="text")
-
-# st.divider()
-
-# st.subheader("Example Raw-to-Standard Mapping")
-
-# st.markdown(
-#     """
-# For a real public dataset, raw column names may not match our app directly.
-# We will map them into the standard schema.
-
-# Example:
-
-# ```text
-# raw package column       → package_id
-# raw courier column       → courier_id
-# raw accept timestamp     → accepted_time
-# raw finish timestamp     → completed_time
-# raw promised timestamp   → promised_delivery_time
-# raw origin coordinates   → origin_lat, origin_lng
-# raw destination coords    → destination_lat, destination_lng
-# ```
-# """
-# )
-
 from __future__ import annotations
 
 from pathlib import Path
 import sys
 
 import pandas as pd
+import plotly.express as px
 import streamlit as st
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
@@ -154,299 +13,505 @@ SRC_DIR = ROOT_DIR / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from logidelay.data.schema_adapter import (
-    OPTIONAL_STANDARD_COLUMNS,
-    REQUIRED_STANDARD_COLUMNS,
-    STANDARD_COLUMNS,
-    validate_standard_schema,
+st.set_page_config(
+    page_title="Dataset Integration",
+    page_icon="🧩",
+    layout="wide",
 )
-
-st.set_page_config(page_title="Dataset Integration", page_icon="🧩", layout="wide")
 
 st.title("🧩 Dataset Integration")
 
 st.markdown(
     """
-This page defines the standard LogiDelay input schema and explains how public or
-enterprise logistics datasets can be mapped into the same country-neutral event-log structure.
+# Cainiao LaDe-P Dataset Integration
 
-The purpose of this layer is to keep the research framework **dataset-flexible**.
-Different logistics datasets may use different column names, but once they are mapped
-into the standard schema, the same delay diagnosis, distance reasoning, severity scoring,
-and explanation pipeline can be applied.
+This page documents how the public Cainiao LaDe-P pickup logistics dataset is mapped
+into the standardized event-log schema used by LogiDelay Copilot.
+
+The goal is to support reproducible research for proactive service-window breach
+prediction.
 """
 )
 
-st.subheader("Standard LogiDelay Schema")
-
-schema_df = pd.DataFrame(
-    {
-        "column_name": STANDARD_COLUMNS,
-        "required": [
-            "Yes" if col in REQUIRED_STANDARD_COLUMNS else "Optional"
-            for col in STANDARD_COLUMNS
-        ],
-        "description": [
-            "Unique package, shipment, order, or delivery identifier",
-            "Courier, carrier, driver, or delivery resource identifier",
-            "City or service area",
-            "Operational zone, region, or cluster",
-            "Task type such as delivery or pickup",
-            "Origin latitude or task-start latitude",
-            "Origin longitude or task-start longitude",
-            "Destination latitude or service-location latitude",
-            "Destination longitude or service-location longitude",
-            "Time when the task was assigned or created",
-            "Time when the courier/carrier accepted the task",
-            "Time when pickup or task execution started",
-            "Time when delivery, pickup, or service task was completed",
-            "Promised or expected service completion time",
-            "Number of courier/carrier tasks in a recent operating window",
-        ],
-    }
+STANDARDIZED_SAMPLE_PATH = (
+    ROOT_DIR / "data" / "processed" / "lade_p_standardized_sample.csv"
 )
 
-st.dataframe(schema_df, use_container_width=True)
+PROACTIVE_SAMPLE_PATH = (
+    ROOT_DIR / "data" / "processed" / "lade_p_proactive_breach_sample.csv"
+)
+
+PREDICTIONS_PATH = (
+    ROOT_DIR
+    / "data"
+    / "processed"
+    / "lade_p_breach_model_predictions_with_urgency.csv"
+)
+
+
+@st.cache_data
+def load_csv(path: Path) -> pd.DataFrame:
+    return pd.read_csv(path)
+
+
+def convert_numeric_columns(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
+    data = df.copy()
+
+    for col in cols:
+        if col in data.columns:
+            data[col] = pd.to_numeric(data[col], errors="coerce")
+
+    return data
+
 
 st.divider()
 
-st.subheader("Built-In Public Dataset: LaDe-P Sample")
+# ---------------------------------------------------------------------
+# Dataset purpose
+# ---------------------------------------------------------------------
+st.subheader("Purpose of Dataset Integration")
 
 st.markdown(
     """
-The app includes support for a standardized **LaDe-P public benchmark sample**.
+Public logistics datasets often use different field names and formats. This project
+maps the raw public dataset into a consistent logistics schema so that feature
+engineering, model training, dashboarding, and paper evaluation remain reproducible.
 
-LaDe-P is used as the first real public-data validation case because it contains
-courier pickup service-task records with:
+For this research, the most important dataset is **LaDe-P**, because it contains pickup
+service-window fields:
 
-- order ID
-- city and region
-- courier ID
-- acceptance time
-- pickup time
-- service time window
-- pickup/customer location coordinates
-- courier GPS coordinates when available
+```text
+accept_time
+time_window_start
+time_window_end
+pickup_time
+```
 
-In LogiDelay Copilot, LaDe-P is mapped into the standard schema and used to evaluate
-**logistics service-task delay diagnosis**.
-
-For this dataset, the interpretation is:
-
-`pickup_time > time_window_end` means the pickup service task was delayed.
-
-The pickup event is treated as the task completion event:
-
-- `pickup_time` becomes `completed_time`
-- `time_window_end` becomes `promised_delivery_time`
-
-This allows the same pipeline to calculate service-window delay, distance-adjusted
-execution behavior, workload pressure, root-cause weak labels, and Operational
-Exception Severity.
+These fields allow us to define a proactive breach prediction task.
 """
 )
 
 st.divider()
 
-st.subheader("Why This Schema Is Country-Neutral")
+# ---------------------------------------------------------------------
+# Dataset mapping
+# ---------------------------------------------------------------------
 
-st.markdown(
-    """
-The framework does not depend on one country's logistics system. It depends on
-universal event-log concepts:
+st.subheader("LaDe-P Field Mapping")
 
-- task assignment or creation
-- task acceptance
-- pickup, delivery, or service start
-- completion
-- promised service time
-- workload
-- distance or location
-- event gaps
-- service-window deviation
-
-These concepts are common across last-mile delivery, parcel pickup, freight transportation,
-courier operations, and TMS-style logistics systems.
-
-The public LaDe-P sample is used as one empirical benchmark, but the framework itself
-is designed to be reusable for other countries and logistics networks when comparable
-event-log data is available.
-"""
+mapping_df = pd.DataFrame(
+    [
+        {
+            "Raw LaDe-P Field": "order_id",
+            "Standard Field": "package_id",
+            "Purpose": "Unique pickup task or package identifier",
+        },
+        {
+            "Raw LaDe-P Field": "courier_id",
+            "Standard Field": "courier_id",
+            "Purpose": "Courier responsible for the pickup task",
+        },
+        {
+            "Raw LaDe-P Field": "city",
+            "Standard Field": "city",
+            "Purpose": "City where the pickup task occurs",
+        },
+        {
+            "Raw LaDe-P Field": "region_id",
+            "Standard Field": "zone_id",
+            "Purpose": "Operational zone or region identifier",
+        },
+        {
+            "Raw LaDe-P Field": "accept_time",
+            "Standard Field": "assigned_time / accepted_time",
+            "Purpose": "Time when the courier accepted the task",
+        },
+        {
+            "Raw LaDe-P Field": "time_window_start",
+            "Standard Field": "service_window_start_time",
+            "Purpose": "Beginning of the pickup service window",
+        },
+        {
+            "Raw LaDe-P Field": "time_window_end",
+            "Standard Field": "promised_delivery_time",
+            "Purpose": "End of the pickup service window / promised deadline",
+        },
+        {
+            "Raw LaDe-P Field": "pickup_time",
+            "Standard Field": "pickup_time / completed_time",
+            "Purpose": "Actual pickup completion time",
+        },
+        {
+            "Raw LaDe-P Field": "accept_gps_lat",
+            "Standard Field": "origin_lat",
+            "Purpose": "Courier latitude at acceptance time",
+        },
+        {
+            "Raw LaDe-P Field": "accept_gps_lng",
+            "Standard Field": "origin_lng",
+            "Purpose": "Courier longitude at acceptance time",
+        },
+        {
+            "Raw LaDe-P Field": "lat",
+            "Standard Field": "destination_lat",
+            "Purpose": "Pickup location latitude",
+        },
+        {
+            "Raw LaDe-P Field": "lng",
+            "Standard Field": "destination_lng",
+            "Purpose": "Pickup location longitude",
+        },
+    ]
 )
+
+st.dataframe(mapping_df, use_container_width=True)
 
 st.divider()
 
-st.subheader("Validate a CSV Against the Standard Schema")
+# ---------------------------------------------------------------------
+# Standard schema
+# ---------------------------------------------------------------------
 
-uploaded_file = st.file_uploader(
-    "Upload a CSV to validate schema only",
-    type=["csv"],
-)
-
-if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file)
-    validation = validate_standard_schema(df)
-
-    if validation.is_valid:
-        st.success("CSV matches the required LogiDelay schema.")
-
-        col1, col2 = st.columns(2)
-
-        col1.markdown("#### Available optional columns")
-        col1.write(validation.available_optional_columns)
-
-        col2.markdown("#### Missing optional columns")
-        col2.write(validation.missing_optional_columns)
-
-        st.markdown("#### Preview")
-        st.dataframe(df.head(20), use_container_width=True)
-
-    else:
-        st.error("CSV is missing required columns.")
-
-        st.markdown("#### Missing required columns")
-        st.code("\n".join(validation.missing_required_columns), language="text")
-
-        st.markdown("#### Required columns")
-        st.code("\n".join(REQUIRED_STANDARD_COLUMNS), language="text")
-
-        st.markdown("#### Optional columns")
-        st.code("\n".join(OPTIONAL_STANDARD_COLUMNS), language="text")
-
-st.divider()
-
-st.subheader("Example Raw-to-Standard Mapping")
+st.subheader("Standardized Event-Log Schema")
 
 st.markdown(
     """
-For a real public dataset, raw column names may not match the app directly.
-The adapter layer maps raw dataset columns into the standard LogiDelay schema.
-"""
-)
-
-st.markdown("#### Generic Mapping Example")
-
-generic_mapping_df = pd.DataFrame(
-    {
-        "raw_dataset_field": [
-            "raw package/order column",
-            "raw courier/carrier column",
-            "raw city column",
-            "raw region/zone column",
-            "raw accept timestamp",
-            "raw task-start timestamp",
-            "raw finish/completion time",
-            "raw promised timestamp",
-            "raw origin coordinates",
-            "raw destination coordinates",
-        ],
-        "standard_logidelay_field": [
-            "package_id",
-            "courier_id",
-            "city",
-            "zone_id",
-            "accepted_time",
-            "pickup_time",
-            "completed_time",
-            "promised_delivery_time",
-            "origin_lat, origin_lng",
-            "destination_lat, destination_lng",
-        ],
-    }
-)
-
-st.dataframe(generic_mapping_df, use_container_width=True)
-
-st.markdown("#### LaDe-P Mapping Used in This Project")
-
-lade_mapping_df = pd.DataFrame(
-    {
-        "LaDe-P field": [
-            "order_id",
-            "courier_id",
-            "city",
-            "region_id",
-            "accept_time",
-            "accept_time",
-            "pickup_time",
-            "pickup_time",
-            "time_window_end",
-            "accept_gps_lat",
-            "accept_gps_lng",
-            "lat",
-            "lng",
-        ],
-        "LogiDelay standard field": [
-            "package_id",
-            "courier_id",
-            "city",
-            "zone_id",
-            "assigned_time",
-            "accepted_time",
-            "pickup_time",
-            "completed_time",
-            "promised_delivery_time",
-            "origin_lat",
-            "origin_lng",
-            "destination_lat",
-            "destination_lng",
-        ],
-        "reason": [
-            "Order ID is the task/package identifier",
-            "Courier ID identifies the delivery resource",
-            "City is the service area",
-            "Region ID is used as the operational zone",
-            "Accept time is used as task assignment time",
-            "Accept time is also the task acceptance time",
-            "Pickup time is the service execution event",
-            "Pickup time represents completion of the pickup task",
-            "End of service window is the promised completion time",
-            "Courier GPS latitude at acceptance is used as origin latitude",
-            "Courier GPS longitude at acceptance is used as origin longitude",
-            "Customer/pickup location latitude is destination latitude",
-            "Customer/pickup location longitude is destination longitude",
-        ],
-    }
-)
-
-st.dataframe(lade_mapping_df, use_container_width=True)
-
-st.markdown(
-    """
-Once mapped, the same pipeline can calculate distance, delay, root cause,
-Operational Exception Severity, and planner-facing explanations.
-"""
-)
-
-st.divider()
-
-st.subheader("Distance-Aware Integration")
-
-st.markdown(
-    """
-Distance is optional but preferred. If latitude and longitude columns are available,
-the app calculates approximate distance using the Haversine formula.
+The standardized schema gives the project a consistent data structure across feature
+engineering, model training, evaluation, and dashboard pages.
 """
 )
 
 st.code(
     """
-distance_km = haversine(origin_lat, origin_lng, destination_lat, destination_lng)
+package_id
+courier_id
+city
+zone_id
+assigned_time
+accepted_time
+service_window_start_time
+promised_delivery_time
+pickup_time
+completed_time
+origin_lat
+origin_lng
+destination_lat
+destination_lng
+courier_workload_2h
+""",
+    language="text",
+)
 
-expected_execution_time_minutes = distance_km / expected_speed_kmph * 60
+st.divider()
 
-distance_adjusted_execution_ratio =
-    actual_execution_time_minutes / expected_execution_time_minutes
+# ---------------------------------------------------------------------
+# Target label
+# ---------------------------------------------------------------------
+
+st.subheader("Service-Window Breach Label")
+
+st.markdown(
+    """
+The target variable is created by comparing the actual pickup completion time against
+the service-window end time.
+
+A task is labeled as a breach when the pickup occurs after the promised service-window
+deadline.
+"""
+)
+
+st.code(
+    """
+service_window_breach = 1 if completed_time > promised_delivery_time else 0
 """,
     language="text",
 )
 
 st.markdown(
     """
-This helps the framework distinguish naturally long routes from abnormal execution delays.
-
-For example, a 90-minute task may be normal for a long-distance route, but abnormal
-for a short route. Distance-aware reasoning prevents the model from treating every
-long execution time as the same type of exception.
+This label is used only as the supervised learning target and for evaluation. It is not
+used as a model input feature.
 """
+)
+
+st.divider()
+
+# ---------------------------------------------------------------------
+# Leakage-safe feature design
+# ---------------------------------------------------------------------
+
+st.subheader("Leakage-Safe Prediction Setup")
+
+st.markdown(
+    """
+The proactive model is designed to operate at the time of task acceptance. Therefore,
+features must be available before the pickup outcome is known.
+
+The model excludes post-event fields such as:
+
+* actual pickup completion outcome,
+* delay minutes,
+* delay category,
+* root-cause label,
+* severity score,
+* operational exception severity,
+* event-sequence abnormality scores.
+
+This ensures that model evaluation reflects a realistic proactive dispatch setting.
+"""
+)
+
+st.divider()
+
+# ---------------------------------------------------------------------
+# Dataset preview and statistics
+# ---------------------------------------------------------------------
+
+st.subheader("Processed Dataset Preview")
+
+if not STANDARDIZED_SAMPLE_PATH.exists():
+    st.warning(
+        """
+The standardized LaDe-P sample was not found.
+
+Run:
+
+```bash
+uv run python scripts/prepare_lade_p_sample.py
+```
+"""
+    )
+else:
+    standardized_df = load_csv(STANDARDIZED_SAMPLE_PATH)
+
+    st.markdown("### Standardized LaDe-P Sample")
+
+    st.dataframe(standardized_df.head(20), use_container_width=True)
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric("Rows", f"{len(standardized_df):,}")
+    col2.metric("Columns", f"{len(standardized_df.columns):,}")
+
+    if "city" in standardized_df.columns:
+        col3.metric("Cities", f"{standardized_df['city'].nunique():,}")
+    else:
+        col3.metric("Cities", "N/A")
+
+    if "courier_id" in standardized_df.columns:
+        col4.metric("Couriers", f"{standardized_df['courier_id'].nunique():,}")
+    else:
+        col4.metric("Couriers", "N/A")
+
+st.divider()
+
+# ---------------------------------------------------------------------
+# Proactive feature dataset
+# ---------------------------------------------------------------------
+
+st.subheader("Proactive Breach Feature Dataset")
+
+if not PROACTIVE_SAMPLE_PATH.exists():
+    st.warning(
+        """
+The proactive breach feature dataset was not found.
+
+Run:
+
+```bash
+uv run python scripts/prepare_breach_dataset.py
+```
+"""
+    )
+else:
+    proactive_df = load_csv(PROACTIVE_SAMPLE_PATH)
+
+    proactive_df = convert_numeric_columns(
+        proactive_df,
+        [
+            "service_window_breach",
+            "time_to_window_end_minutes",
+            "distance_km",
+            "expected_travel_time_minutes",
+            "feasibility_margin_minutes",
+            "courier_workload_2h",
+            "time_pressure_score",
+            "distance_feasibility_pressure_score",
+            "workload_pressure_score",
+            "intervention_urgency_score",
+        ],
+    )
+
+    st.dataframe(proactive_df.head(20), use_container_width=True)
+
+    total_rows = len(proactive_df)
+    total_breaches = int(proactive_df["service_window_breach"].sum())
+    breach_rate = proactive_df["service_window_breach"].mean()
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric("Rows", f"{total_rows:,}")
+    col2.metric("Service-Window Breaches", f"{total_breaches:,}")
+    col3.metric("Breach Rate", f"{breach_rate:.2%}")
+
+    if "intervention_priority" in proactive_df.columns:
+        high_count = int(
+            proactive_df["intervention_priority"].isin(["High", "Critical"]).sum()
+        )
+        col4.metric("High/Critical Priority", f"{high_count:,}")
+    else:
+        col4.metric("High/Critical Priority", "N/A")
+
+    st.markdown("### Breach Distribution")
+
+    breach_counts = (
+        proactive_df["service_window_breach"]
+        .value_counts()
+        .reset_index()
+    )
+    breach_counts.columns = ["service_window_breach", "count"]
+
+    fig = px.bar(
+        breach_counts,
+        x="service_window_breach",
+        y="count",
+        title="Service-Window Breach Distribution",
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("### Key Proactive Features")
+
+    feature_cols = [
+        "package_id",
+        "city",
+        "zone_id",
+        "service_window_breach",
+        "time_to_window_end_minutes",
+        "distance_km",
+        "expected_travel_time_minutes",
+        "feasibility_margin_minutes",
+        "courier_workload_2h",
+        "time_pressure_score",
+        "distance_feasibility_pressure_score",
+        "workload_pressure_score",
+        "intervention_urgency_score",
+        "intervention_priority",
+    ]
+
+    available_feature_cols = [
+        col for col in feature_cols if col in proactive_df.columns
+    ]
+
+    st.dataframe(
+        proactive_df[available_feature_cols].head(50),
+        use_container_width=True,
+    )
+
+st.divider()
+
+# ---------------------------------------------------------------------
+# Prediction output integration
+# ---------------------------------------------------------------------
+
+st.subheader("Prediction Output Integration")
+
+if not PREDICTIONS_PATH.exists():
+    st.info(
+        """
+The final prediction output file was not found yet.
+
+Run:
+
+```bash
+uv run python scripts/train_breach_model.py
+```
+"""
+    )
+else:
+    predictions_df = load_csv(PREDICTIONS_PATH)
+
+    predictions_df = convert_numeric_columns(
+        predictions_df,
+        [
+            "service_window_breach",
+            "predicted_breach_probability",
+            "model_risk_rank_score",
+            "intervention_urgency_score",
+        ],
+    )
+
+    sorted_predictions = predictions_df.sort_values(
+        "intervention_urgency_score",
+        ascending=False,
+    ).reset_index(drop=True)
+
+    top50 = sorted_predictions.head(50)
+    captured_breaches = int(top50["service_window_breach"].sum())
+    total_breaches = int(sorted_predictions["service_window_breach"].sum())
+    precision_50 = captured_breaches / 50
+    recall_50 = captured_breaches / total_breaches if total_breaches else 0
+    expected_random = (50 / len(sorted_predictions)) * total_breaches
+    lift_50 = captured_breaches / expected_random if expected_random else 0
+
+    col1, col2, col3, col4 = st.columns(4)
+
+    col1.metric("Prediction Rows", f"{len(predictions_df):,}")
+    col2.metric("Top-50 Captured Breaches", captured_breaches)
+    col3.metric("Urgency Precision@50", f"{precision_50:.2%}")
+    col4.metric("Urgency Lift@50", f"{lift_50:.2f}x")
+
+    st.success(
+        f"""
+The final prediction output integrates model probability, model risk rank, and
+intervention urgency score. The urgency-ranked top 50 queue captures
+**{captured_breaches} actual breaches**, with **Precision@50 = {precision_50:.2%}**,
+**Recall@50 = {recall_50:.2%}**, and **Lift@50 = {lift_50:.2f}x**.
+"""
+    )
+
+    prediction_cols = [
+        "package_id",
+        "city",
+        "zone_id",
+        "service_window_breach",
+        "predicted_breach_probability",
+        "model_risk_rank_score",
+        "intervention_urgency_score",
+        "intervention_priority",
+    ]
+
+    available_prediction_cols = [
+        col for col in prediction_cols if col in sorted_predictions.columns
+    ]
+
+    st.markdown("### Final Prediction Output Preview")
+
+    st.dataframe(
+        sorted_predictions[available_prediction_cols].head(50),
+        use_container_width=True,
+    )
+
+st.divider()
+
+# ---------------------------------------------------------------------
+# Reproducibility commands
+# ---------------------------------------------------------------------
+
+st.subheader("Reproducibility Commands")
+
+st.code(
+    """
+# Prepare LaDe-P standardized sample
+uv run python scripts/prepare_lade_p_sample.py
+
+# Build proactive breach feature dataset
+uv run python scripts/prepare_breach_dataset.py
+
+# Train calibrated breach prediction models
+uv run python scripts/train_breach_model.py
+
+# Run Streamlit app
+uv run streamlit run app/Home.py
+""",
+    language="bash",
 )
