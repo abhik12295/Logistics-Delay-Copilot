@@ -7,6 +7,7 @@ from typing import Any
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+from logidelay.copilot.local_llm_engine import generate_dispatcher_recommendation
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 SRC_DIR = ROOT_DIR / "src"
@@ -465,6 +466,46 @@ selected_row = filtered_df[
     filtered_df["package_id"].astype(str) == selected_package_id
 ].iloc[0]
 
+# recommendation = generate_dispatch_recommendation(selected_row)
+task_evidence_for_llm = {
+    col: selected_row.get(col)
+    for col in [
+        "package_id",
+        "city",
+        "zone_id",
+        "intervention_priority",
+        "predicted_breach_probability",
+        "model_risk_rank_score",
+        "intervention_urgency_score",
+        "time_to_window_end_minutes",
+        "distance_km",
+        "expected_travel_time_minutes",
+        "feasibility_margin_minutes",
+        "courier_workload_2h",
+        "time_pressure_score",
+        "distance_feasibility_pressure_score",
+        "workload_pressure_score",
+    ]
+}
+
+st.markdown("### Recommendation Engine")
+
+use_ollama = st.checkbox(
+    "Use local Ollama GenAI recommendation",
+    value=False,
+)
+
+ollama_model_name = st.text_input(
+    "Ollama model name",
+    value="llama3.2:3b",
+)
+
+llm_recommendation = generate_dispatcher_recommendation(
+    task_evidence=task_evidence_for_llm,
+    use_ollama=use_ollama,
+    model_name=ollama_model_name,
+)
+
 recommendation = generate_dispatch_recommendation(selected_row)
 
 summary_col1, summary_col2, summary_col3, summary_col4 = st.columns(4)
@@ -485,11 +526,36 @@ summary_col4.metric(
 
 st.markdown("### Copilot Summary")
 
-st.info(recommendation["dispatcher_note"])
+st.markdown("### GenAI / Grounded Recommendation")
+
+source_label = (
+    "Local Ollama GenAI"
+    if llm_recommendation.source == "ollama"
+    else "Rule-based fallback"
+)
+
+st.caption(f"Recommendation source: {source_label}")
+
+st.info(llm_recommendation.risk_summary)
+
+st.markdown("### Evidence Summary")
+st.write(llm_recommendation.evidence_summary)
 
 st.markdown("### Recommended Dispatch Action")
+st.success(llm_recommendation.recommended_action)
 
+st.markdown("### Dispatcher Note")
+st.write(llm_recommendation.dispatcher_note)
+
+st.markdown("### Recommendation Confidence")
+st.write(llm_recommendation.confidence)
+
+st.markdown("### Rule-Based Baseline Recommendation")
+st.info(recommendation["dispatcher_note"])
+
+st.markdown("### Rule-Based Baseline Action")
 st.success(recommendation["recommended_action"])
+
 
 st.markdown("### Evidence Used by Copilot")
 
