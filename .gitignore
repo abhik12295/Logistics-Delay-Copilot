@@ -49,7 +49,6 @@ models/
 *.pkl
 *.joblib
 
-data/processed/*
 !data/processed/.gitkeep
 !data/processed/README.md
 !data/processed/lade_p_standardized_sample.csv
