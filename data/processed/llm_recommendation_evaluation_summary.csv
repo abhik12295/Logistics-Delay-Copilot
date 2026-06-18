@@ -1,0 +1,2 @@
+top_k,use_ollama_requested,model_name,records_evaluated,recommendation_source_values,actual_breaches_in_top_k,hallucination_rate,avg_evidence_coverage_score,avg_action_alignment_score,avg_completeness_score,avg_readability_score,avg_overall_recommendation_score
+50,True,qwen2:7b,50,ollama,4,0.0,0.8279999999999998,0.62,1.0,1.0,0.8533999999999997
