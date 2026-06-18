@@ -242,6 +242,12 @@ METRICS_PATH = (
     / "breach_model_metrics.csv"
 )
 
+LLM_SUMMARY_PATH = (
+    ROOT_DIR
+    / "data"
+    / "processed"
+    / "llm_recommendation_evaluation_summary.csv"
+)
 
 @st.cache_data
 def load_predictions(path: Path) -> pd.DataFrame:
@@ -290,6 +296,27 @@ def load_metrics(path: Path) -> pd.DataFrame:
 
     return df
 
+@st.cache_data
+def load_llm_summary(path: Path) -> pd.DataFrame:
+    df = pd.read_csv(path)
+
+    numeric_cols = [
+        "top_k",
+        "records_evaluated",
+        "actual_breaches_in_top_k",
+        "hallucination_rate",
+        "avg_evidence_coverage_score",
+        "avg_action_alignment_score",
+        "avg_completeness_score",
+        "avg_readability_score",
+        "avg_overall_recommendation_score",
+    ]
+
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    return df
 
 def build_topk_summary(
     df: pd.DataFrame,
@@ -433,6 +460,74 @@ Using the proposed intervention urgency ranking, the top 50 dispatch queue captu
 **Lift@50 = {urgency_top50['lift']:.2f}x** over random task selection.
 """
 )
+
+
+st.divider()
+
+st.subheader("GenAI Recommendation Evaluation Snapshot")
+
+if LLM_SUMMARY_PATH.exists():
+    llm_summary_df = load_llm_summary(LLM_SUMMARY_PATH)
+    llm_summary = llm_summary_df.iloc[0]
+
+    genai_col1, genai_col2, genai_col3, genai_col4 = st.columns(4)
+
+    genai_col1.metric(
+        "Recommendation Source",
+        str(llm_summary["recommendation_source_values"]),
+    )
+    genai_col2.metric(
+        "Records Evaluated",
+        f"{int(llm_summary['records_evaluated']):,}",
+    )
+    genai_col3.metric(
+        "Hallucination Rate",
+        f"{llm_summary['hallucination_rate']:.2%}",
+    )
+    genai_col4.metric(
+        "Overall GenAI Score",
+        f"{llm_summary['avg_overall_recommendation_score']:.3f}",
+    )
+
+    genai_col5, genai_col6, genai_col7, genai_col8 = st.columns(4)
+
+    genai_col5.metric(
+        "Evidence Coverage",
+        f"{llm_summary['avg_evidence_coverage_score']:.3f}",
+    )
+    genai_col6.metric(
+        "Action Alignment",
+        f"{llm_summary['avg_action_alignment_score']:.3f}",
+    )
+    genai_col7.metric(
+        "Completeness",
+        f"{llm_summary['avg_completeness_score']:.3f}",
+    )
+    genai_col8.metric(
+        "Readability",
+        f"{llm_summary['avg_readability_score']:.3f}",
+    )
+
+    st.success(
+        f"""
+The GenAI recommendation module was evaluated on
+**{int(llm_summary['records_evaluated'])} top-ranked dispatch tasks** using
+**{llm_summary['recommendation_source_values']}**. It achieved
+**hallucination rate = {llm_summary['hallucination_rate']:.2%}** and
+**overall recommendation score = {llm_summary['avg_overall_recommendation_score']:.3f}**.
+"""
+    )
+else:
+    st.info(
+        """
+        GenAI recommendation evaluation outputs are not available yet.
+
+        Run:
+
+        ```bash
+        uv run python scripts/evaluate_llm_recommendations.py --top-k 50 --use-ollama --model-name qwen2:7b
+        """
+    )
 
 st.divider()
 
