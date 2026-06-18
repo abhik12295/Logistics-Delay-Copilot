@@ -67,6 +67,7 @@ def load_prediction_data(path: Path) -> pd.DataFrame:
         "time_pressure_score",
         "distance_feasibility_pressure_score",
         "workload_pressure_score",
+        "model_risk_rank_score",
     ]
 
     for col in numeric_cols:
@@ -202,6 +203,7 @@ queue_cols = [
     "zone_id",
     "service_window_breach",
     "predicted_breach_probability",
+    "model_risk_rank_score",
     "intervention_urgency_score",
     "intervention_priority",
     "time_to_window_end_minutes",
@@ -286,6 +288,7 @@ evidence_cols = [
     "distance_feasibility_pressure_score",
     "workload_pressure_score",
     "predicted_breach_probability",
+    "model_risk_rank_score",
     "intervention_urgency_score",
     "intervention_priority",
     "service_window_breach",

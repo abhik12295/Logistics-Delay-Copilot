@@ -17,27 +17,45 @@ def _safe_float(value: Any, default: float = 0.0) -> float:
 def classify_breach_risk(probability: float) -> str:
     """
     Convert predicted breach probability into a human-readable risk level.
+
+    This is used only as a fallback. The main app should prefer
+    intervention_priority because breach probabilities are calibrated and may be
+    numerically small in rare-event prediction.
     """
     probability = _safe_float(probability)
 
-    if probability >= 0.75:
+    if probability >= 0.10:
         return "Critical"
-    if probability >= 0.50:
+    if probability >= 0.05:
         return "High"
-    if probability >= 0.25:
+    if probability >= 0.02:
         return "Medium"
     return "Low"
+
+
+def get_intervention_priority(row: pd.Series) -> str:
+    """
+    Use intervention_priority when available; otherwise classify from probability.
+    """
+    priority = str(row.get("intervention_priority", "")).strip()
+
+    if priority and priority.lower() not in {"nan", "none"}:
+        return priority
+
+    return classify_breach_risk(row.get("predicted_breach_probability"))
 
 
 def identify_primary_risk_factor(row: pd.Series) -> str:
     """
     Identify the strongest operational risk factor for dispatcher explanation.
     """
+    model_risk = _safe_float(row.get("model_risk_rank_score"))
     time_pressure = _safe_float(row.get("time_pressure_score"))
     workload_pressure = _safe_float(row.get("workload_pressure_score"))
     distance_pressure = _safe_float(row.get("distance_feasibility_pressure_score"))
 
     risk_scores = {
+        "model-predicted breach risk": model_risk,
         "time pressure": time_pressure,
         "courier workload pressure": workload_pressure,
         "distance feasibility pressure": distance_pressure,
@@ -51,6 +69,7 @@ def generate_dispatch_recommendation(row: pd.Series) -> str:
     Generate a practical dispatcher recommendation from model evidence.
     """
     breach_probability = _safe_float(row.get("predicted_breach_probability"))
+    risk_rank = _safe_float(row.get("model_risk_rank_score"))
     urgency_score = _safe_float(row.get("intervention_urgency_score"))
     time_left = _safe_float(row.get("time_to_window_end_minutes"))
     feasibility_margin = _safe_float(row.get("feasibility_margin_minutes"))
@@ -58,7 +77,7 @@ def generate_dispatch_recommendation(row: pd.Series) -> str:
     distance_km = _safe_float(row.get("distance_km"))
     expected_travel = _safe_float(row.get("expected_travel_time_minutes"))
 
-    risk_level = classify_breach_risk(breach_probability)
+    risk_level = get_intervention_priority(row)
     primary_factor = identify_primary_risk_factor(row)
 
     if risk_level in {"Critical", "High"}:
@@ -70,7 +89,7 @@ def generate_dispatch_recommendation(row: pd.Series) -> str:
             )
         elif workload >= 15:
             action = (
-                "Review courier workload and consider rebalancing. The task has high "
+                "Review courier workload and consider rebalancing. The task has elevated "
                 "breach risk and the courier appears heavily loaded."
             )
         elif time_left <= 30:
@@ -80,8 +99,9 @@ def generate_dispatch_recommendation(row: pd.Series) -> str:
             )
         else:
             action = (
-                "Monitor this task closely and confirm courier progress. The model indicates "
-                "elevated breach probability based on current time, distance, and workload signals."
+                "Monitor this task closely and confirm courier progress. The model ranks "
+                "this task among the higher-risk cases based on current time, distance, "
+                "and workload signals."
             )
 
     elif risk_level == "Medium":
@@ -99,8 +119,9 @@ def generate_dispatch_recommendation(row: pd.Series) -> str:
     return (
         f"Risk level: {risk_level}. "
         f"Primary risk factor: {primary_factor}. "
-        f"Predicted breach probability is {breach_probability:.1%}, with an intervention "
-        f"urgency score of {urgency_score:.2f}. "
+        f"Predicted breach probability is {breach_probability:.2%}. "
+        f"Model risk rank score is {risk_rank:.2f}, and intervention urgency score is "
+        f"{urgency_score:.2f}. "
         f"Time remaining before window end is {time_left:.1f} minutes, estimated travel "
         f"time is {expected_travel:.1f} minutes, feasibility margin is "
         f"{feasibility_margin:.1f} minutes, distance is {distance_km:.2f} km, and "
@@ -113,12 +134,10 @@ def generate_short_action(row: pd.Series) -> str:
     """
     Short action text for intervention queue table.
     """
-    breach_probability = _safe_float(row.get("predicted_breach_probability"))
+    risk_level = get_intervention_priority(row)
     feasibility_margin = _safe_float(row.get("feasibility_margin_minutes"))
     time_left = _safe_float(row.get("time_to_window_end_minutes"))
     workload = _safe_float(row.get("courier_workload_2h"))
-
-    risk_level = classify_breach_risk(breach_probability)
 
     if risk_level in {"Critical", "High"}:
         if feasibility_margin < 0:
