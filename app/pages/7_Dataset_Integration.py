@@ -511,7 +511,7 @@ uv run python scripts/prepare_breach_dataset.py
 uv run python scripts/train_breach_model.py
 
 # Run Streamlit app
-uv run streamlit run app/Home.py
+uv run streamlit run app/home.py
 """,
     language="bash",
 )

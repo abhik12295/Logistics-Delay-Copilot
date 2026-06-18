@@ -336,7 +336,7 @@ uv run python scripts/train_breach_model.py
 Run the Streamlit app:
 
 ```bash
-uv run streamlit run app/Home.py
+uv run streamlit run app/home.py
 ```
 
 ---
