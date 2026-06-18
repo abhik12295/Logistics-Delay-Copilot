@@ -49,6 +49,7 @@ def convert_lade_p_to_logidelay(df: pd.DataFrame) -> pd.DataFrame:
     for _, row in df.iterrows():
         accept_time = _parse_lade_time(row.get("accept_time"))
         pickup_time = _parse_lade_time(row.get("pickup_time"))
+        time_window_start = _parse_lade_time(row.get("time_window_start"))
         time_window_end = _parse_lade_time(row.get("time_window_end"))
 
         origin_lat = _first_valid(row, ["accept_gps_lat", "pickup_gps_lat", "lat"])
@@ -70,6 +71,7 @@ def convert_lade_p_to_logidelay(df: pd.DataFrame) -> pd.DataFrame:
                 "destination_lng": destination_lng,
                 "assigned_time": accept_time,
                 "accepted_time": accept_time,
+                "service_window_start_time": time_window_start,
                 "pickup_time": pickup_time,
                 "completed_time": pickup_time,
                 "promised_delivery_time": time_window_end,
@@ -81,13 +83,17 @@ def convert_lade_p_to_logidelay(df: pd.DataFrame) -> pd.DataFrame:
 
     standardized = pd.DataFrame(records)
 
-    standardized["assigned_time"] = pd.to_datetime(standardized["assigned_time"], errors="coerce")
+    standardized["assigned_time"] = pd.to_datetime(
+    standardized["assigned_time"], errors="coerce")
     standardized["accepted_time"] = pd.to_datetime(standardized["accepted_time"], errors="coerce")
-    standardized["pickup_time"] = pd.to_datetime(standardized["pickup_time"], errors="coerce")
-    standardized["completed_time"] = pd.to_datetime(standardized["completed_time"], errors="coerce")
+    standardized["service_window_start_time"] = pd.to_datetime(
+        standardized["service_window_start_time"], errors="coerce")
+    standardized["pickup_time"] = pd.to_datetime(
+        standardized["pickup_time"], errors="coerce")
+    standardized["completed_time"] = pd.to_datetime(
+        standardized["completed_time"], errors="coerce")
     standardized["promised_delivery_time"] = pd.to_datetime(
-        standardized["promised_delivery_time"], errors="coerce"
-    )
+        standardized["promised_delivery_time"], errors="coerce")
 
     return standardized
 
